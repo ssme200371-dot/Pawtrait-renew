@@ -10,7 +10,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
-  const [authMode, setAuthMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
+  const [authMode, setAuthMode] = useState<'LOGIN' | 'SIGNUP' | 'RECOVERY'>('LOGIN');
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', name: '', nickname: '' });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -84,6 +84,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
+      if (authMode === 'RECOVERY') {
+        const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
+          redirectTo: window.location.origin, // Just redirect to home, they will be logged in
+        });
+
+        if (error) throw error;
+
+        alert("비밀번호 재설정 이메일이 발송되었습니다.\n메일함을 확인해주세요.");
+        setAuthMode('LOGIN');
+        return;
+      }
+
       if (authMode === 'SIGNUP') {
         const { data, error } = await supabase.auth.signUp({
           email: form.email,
@@ -124,7 +136,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
       }
     } catch (err: any) {
       console.error("[AuthDebug] Error:", err);
-      setErrorMsg(err.message || "오류가 발생했습니다.");
+      let message = err.message || "오류가 발생했습니다.";
+
+      // Translate common Supabase auth errors
+      if (message.includes("Invalid login credentials")) {
+        message = "아이디 또는 비밀번호가 일치하지 않습니다.";
+      } else if (message.includes("Email not confirmed")) {
+        message = "이메일 인증이 완료되지 않았습니다.";
+      } else if (message.includes("User already registered")) {
+        message = "이미 가입된 이메일입니다.";
+      }
+
+      setErrorMsg(message);
     } finally {
 
       setLoading(false);
@@ -150,7 +173,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
         </button>
       </div>
 
-      <div className="p-8">
+      {authMode === 'RECOVERY' && (
+        <div className="px-8 pt-8 pb-0 text-center animate-in fade-in slide-in-from-bottom-2">
+          <h3 className="text-lg font-bold text-slate-900 mb-2">비밀번호 찾기</h3>
+          <p className="text-xs text-slate-500 break-keep">가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.</p>
+        </div>
+      )}
+
+      <div className={authMode === 'RECOVERY' ? "p-8 pt-6" : "p-8"}>
         <form onSubmit={handleAuth} className="space-y-4">
           {authMode === 'SIGNUP' && (
             <div className="grid grid-cols-2 gap-3">
@@ -180,19 +210,45 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
             className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
             required
           />
-          <input
-            type="password"
-            placeholder="비밀번호 (6자리 숫자)"
-            value={form.password}
-            onChange={e => setForm({ ...form, password: e.target.value })}
-            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
-            required
-          />
+          {authMode !== 'RECOVERY' && (
+            <input
+              type="password"
+              placeholder="비밀번호 (6자리 숫자)"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+              required
+            />
+          )}
 
           <Button fullWidth disabled={loading} type="submit" className="py-4 shadow-brand-500/20 mt-4">
-            {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (authMode === 'LOGIN' ? '로그인하기' : '회원가입하기')}
+            {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (authMode === 'LOGIN' ? '로그인하기' : authMode === 'SIGNUP' ? '회원가입하기' : '비밀번호 재설정 메일 보내기')}
           </Button>
         </form>
+
+        {authMode === 'LOGIN' && (
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => { setAuthMode('RECOVERY'); setErrorMsg(null); }}
+              className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
+            >
+              비밀번호를 잊으셨나요?
+            </button>
+          </div>
+        )}
+
+        {authMode === 'RECOVERY' && (
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => { setAuthMode('LOGIN'); setErrorMsg(null); }}
+              className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
+            >
+              로그인으로 돌아가기
+            </button>
+          </div>
+        )}
 
         <AnimatePresence>
           {errorMsg && (

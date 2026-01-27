@@ -6,6 +6,7 @@ import { ResultPage } from './components/ResultPage';
 import { GalleryPage } from './components/GalleryPage';
 import { ReviewsPage } from './components/ReviewsPage';
 import { MembershipPage } from './components/MembershipPage';
+import { CheckoutPage } from './components/CheckoutPage';
 import { DataGenerator } from './components/DataGenerator';
 import { ViewState, ProductType, GeneratedImage, UserProfile } from './types';
 import { CheckCircle, Loader2 } from 'lucide-react';
@@ -18,6 +19,8 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('STUDIO');
   const [studioView, setStudioView] = useState<ViewState>('LANDING');
   const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
+  const [selectedProductType, setSelectedProductType] = useState<ProductType>('CANVAS');
+  const [selectedCreditPackage, setSelectedCreditPackage] = useState<{ credits: number, price: number, name: string } | null>(null);
   const [orderComplete, setOrderComplete] = useState(false);
   const [credits, setCredits] = useState(0);
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -67,6 +70,27 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error("Profile Fetch Error:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check for Toss Payments success callback
+    const params = new URLSearchParams(window.location.search);
+    const paymentKey = params.get('paymentKey');
+    const orderId = params.get('orderId');
+    const amount = params.get('amount');
+
+    if (paymentKey && orderId && amount) {
+      // Payment Successful
+      setOrderComplete(true);
+      setActiveTab('STUDIO');
+      setStudioView('STUDIO'); // Or stay in Result view if preferred, but rendering Success state in main is handled below
+
+      // Clear URL params to prevent re-triggering on refresh
+      window.history.replaceState({}, '', window.location.pathname);
+
+      console.log('Payment Success:', { paymentKey, orderId, amount });
+      // TODO: Here you would normally verify payment with your backend
     }
   }, []);
 
@@ -161,6 +185,43 @@ const App: React.FC = () => {
     if (tab === 'STUDIO') resetFlow();
   };
 
+  const handleDeductCredits = async (amount: number) => {
+    // 1. Optimistic UI update
+    setCredits(prev => Math.max(0, prev - amount));
+    if (user) {
+      setUser(prev => prev ? { ...prev, credits: Math.max(0, prev.credits - amount) } : null);
+    }
+
+    // 2. DB Update
+    if (user?.id) {
+      try {
+        const { error } = await supabase.rpc('deduct_credits', {
+          user_id: user.id,
+          amount: amount
+        });
+
+        if (error) {
+          // Fallback if RPC fails, try direct update (though RPC is safer for concurrency)
+          console.warn("RPC failed, trying direct update", error);
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ credits: Math.max(0, credits - amount) })
+            .eq('id', user.id);
+
+          if (updateError) throw updateError;
+        }
+      } catch (err) {
+        console.error("Failed to deduct credits in DB:", err);
+        // Revert UI on failure
+        setCredits(prev => prev + amount);
+        if (user) {
+          setUser(prev => prev ? { ...prev, credits: prev.credits + amount } : null);
+        }
+        showToast("크레딧 차감 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
   // 탭이나 뷰가 변경될 때마다 스크롤을 최상단으로 이동
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -196,14 +257,16 @@ const App: React.FC = () => {
               <CheckCircle className="w-20 h-20 text-green-500" />
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-slate-900">주문 요청 완료!</h2>
-                <p className="text-slate-500">입금이 확인되면 관리자가 승인 후 제작을 시작합니다.</p>
+                <p className="text-slate-500">결제가 성공적으로 처리되었습니다.</p>
               </div>
               <Button onClick={resetFlow} size="lg" className="px-10">홈으로 돌아가기</Button>
             </div>
           ) : (
             studioView === 'LANDING' ? <LandingPage onStart={() => setStudioView('STUDIO')} onNavigateToGallery={() => setActiveTab('GALLERY')} onNavigateToReviews={() => setActiveTab('REVIEWS')} onOpenLogin={() => setIsLoginModalOpen(true)} user={user} /> :
-              studioView === 'STUDIO' ? <StudioPage onBack={() => setStudioView('LANDING')} onGenerate={(urls, style) => { setSelectedImageUrls(urls); setStudioView('RESULT'); }} credits={credits} onPurchaseCredits={() => { }} onDeductCredit={(amt) => setCredits(prev => Math.max(0, prev - amt))} user={user} /> :
-                <ResultPage initialImages={selectedImageUrls} onHome={resetFlow} onPaymentComplete={() => setOrderComplete(true)} showToast={showToast} />
+              studioView === 'STUDIO' ? <StudioPage onBack={() => setStudioView('LANDING')} onGenerate={(urls, style) => { setSelectedImageUrls(urls); setStudioView('RESULT'); }} credits={credits} onPurchaseCredits={() => { }} onDeductCredit={handleDeductCredits} user={user} /> :
+                studioView === 'RESULT' ? <ResultPage initialImages={selectedImageUrls} onHome={resetFlow} onCheckout={(image, type) => { setSelectedImageUrls([image]); setSelectedProductType(type); setStudioView('CHECKOUT'); }} showToast={showToast} /> :
+                  studioView === 'CHECKOUT' ? <CheckoutPage productType={selectedProductType} selectedImageUrl={selectedImageUrls[0]} onBack={() => setStudioView('RESULT')} onSuccess={() => setOrderComplete(true)} /> :
+                    null
           )
         )}
         {activeTab === 'GALLERY' && <GalleryPage items={gallery} onNavigateToStudio={() => { setActiveTab('STUDIO'); setStudioView('STUDIO'); }} showToast={showToast} />}

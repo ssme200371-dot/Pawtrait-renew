@@ -17,7 +17,7 @@ interface StudioPageProps {
   onGenerate: (imageUrls: string[], style: StyleOption) => void;
   onBack: () => void;
   credits: number;
-  onPurchaseCredits: (amount: number) => void;
+  onPurchaseCredits: (pkg: { credits: number, price: number, name: string }) => void;
   onDeductCredit: (amount: number) => void;
   user: UserProfile | null;
 }

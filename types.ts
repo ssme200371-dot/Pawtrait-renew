@@ -53,7 +53,7 @@ export interface GeneratedImage {
   date: string;
 }
 
-export type ProductType = 'DIGITAL' | 'CANVAS';
+export type ProductType = 'DIGITAL' | 'CANVAS' | 'CREDIT';
 
 export interface CartItem {
   imageId: string;
