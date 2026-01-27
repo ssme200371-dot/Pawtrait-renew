@@ -189,7 +189,7 @@ const App: React.FC = () => {
     // 1. Optimistic UI update
     setCredits(prev => Math.max(0, prev - amount));
     if (user) {
-      setUser(prev => prev ? { ...prev, credits: Math.max(0, prev.credits - amount) } : null);
+      setUser(prev => prev ? { ...prev, credits: Math.max(0, (prev.credits || 0) - amount) } : null);
     }
 
     // 2. DB Update
@@ -215,7 +215,7 @@ const App: React.FC = () => {
         // Revert UI on failure
         setCredits(prev => prev + amount);
         if (user) {
-          setUser(prev => prev ? { ...prev, credits: prev.credits + amount } : null);
+          setUser(prev => prev ? { ...prev, credits: (prev.credits || 0) + amount } : null);
         }
         showToast("크레딧 차감 중 오류가 발생했습니다.");
       }
