@@ -3,12 +3,7 @@ import { ChevronLeft, CreditCard, Truck, ShieldCheck, Diamond } from 'lucide-rea
 import { Button } from './Button';
 import { ProductType } from '../types';
 
-// Toss Payments SDK 선언
-declare global {
-  interface Window {
-    TossPayments: any;
-  }
-}
+
 
 interface CheckoutPageProps {
   productType: ProductType;
@@ -38,9 +33,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const paymentWidgetRef = useRef<any>(null);
-  const agreementWidgetRef = useRef<any>(null);
-
   // Price Calculation Logic (Fallback if amount not provided)
   let calculatedPrice = 0;
   let shippingCost = 0;
@@ -57,96 +49,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const total = calculatedPrice + shippingCost;
   const displayProductName = productName || (productType === 'CANVAS' ? '최고급 캔버스 액자 (20x20)' : '고해상도 디지털 원본');
 
-  // Toss Payments SDK 초기화
-  useEffect(() => {
-    // SDK 스크립트 로드
-    const script = document.createElement('script');
-    script.src = 'https://js.tosspayments.com/v2/TossPayments';
-    script.async = true;
-    script.onload = initializePaymentWidget;
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-      // 컴포넌트 언마운트 시 결제위젯 정리
-      if (paymentWidgetRef.current) {
-        paymentWidgetRef.current.destroy().catch(() => { });
-      }
-      if (agreementWidgetRef.current) {
-        agreementWidgetRef.current.destroy().catch(() => { });
-      }
-    };
-  }, []);
-
-  // 결제위젯 초기화
-  const initializePaymentWidget = async () => {
-    try {
-      const { TossPayments } = window;
-      if (!TossPayments) return;
-
-      // clientKey 설정
-      const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
-      if (!clientKey) {
-        console.error('Toss Payments Client Key가 설정되지 않았습니다.');
-        alert('결제 시스템 설정 오류입니다. 관리자에게 문의해주세요.');
-        return;
-      }
-
-      const tossPayments = TossPayments(clientKey);
-
-      // 고객 키 생성 (비회원 결제)
-      const widgets = tossPayments.widgets({
-        customerKey: TossPayments.ANONYMOUS,
-      });
-
-      // 금액 설정
-      await widgets.setAmount({
-        currency: 'KRW',
-        value: total,
-      });
-
-      // 결제 수단 UI 렌더링
-      const paymentMethodWidget = await widgets.renderPaymentMethods(
-        '#payment-widget',
-        { value: total },
-        { variantKey: 'DEFAULT' }
-      );
-
-      paymentWidgetRef.current = {
-        widgets,
-        paymentMethodWidget,
-      };
-
-      // 약관 UI 렌더링
-      const agreementWidget = await widgets.renderAgreement('#agreement-widget', {
-        variantKey: 'DEFAULT',
-      });
-
-      agreementWidgetRef.current = agreementWidget;
-
-      // 약관 동의 상태 감시
-      agreementWidget.on('agreementStatusChange', (agreementStatus: any) => {
-        setAgreementChecked(agreementStatus.agreedRequiredTerms);
-      });
-
-      // 결제 수단 선택 이벤트
-      paymentMethodWidget.on('paymentMethodSelect', (selectedPaymentMethod: any) => {
-        console.log('선택된 결제수단:', selectedPaymentMethod);
-      });
-    } catch (error) {
-      console.error('결제위젯 초기화 실패:', error);
-    }
-  };
-
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!paymentWidgetRef.current) {
-      alert('결제 시스템 초기화 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
 
     if (!customerName || !customerEmail) {
       alert('고객 정보를 입력해주세요.');
@@ -160,23 +64,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     setLoading(true);
 
-    try {
-      const { widgets } = paymentWidgetRef.current;
-
-      // 결제 요청 (Promise 방식)
-      await widgets.requestPayment({
-        orderId: generateRandomString(),
-        orderName: displayProductName,
-        successUrl: window.location.origin,
-        failUrl: window.location.origin,
-        customerEmail: customerEmail,
-        customerName: customerName,
-      });
-    } catch (error) {
-      console.error('결제 요청 실패:', error);
-      alert('결제 요청 중 오류가 발생했습니다.');
+    // Simulate API call for Manual Transfer Order
+    setTimeout(() => {
       setLoading(false);
-    }
+      // In a real app, you would send this order to your backend here
+      onSuccess();
+    }, 1500);
   };
 
   return (
@@ -275,21 +168,34 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         </section>
 
-        {/* Payment Method Widget */}
+        {/* Payment Method Info */}
         <section>
           <h3 className="font-serif-heading font-bold text-slate-900 mb-4 flex items-center gap-2 text-lg">
-            <CreditCard className="w-5 h-5" /> 결제 수단
+            <CreditCard className="w-5 h-5" /> 결제 방법
           </h3>
-          <div id="payment-widget" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 min-h-64">
-            {/* 결제 UI가 여기에 렌더링됩니다 */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <p className="font-bold text-slate-800 mb-2">무통장 입금</p>
+            <div className="bg-slate-50 p-4 rounded-xl text-sm space-y-1 text-slate-600">
+              <p>신한은행 110-123-456789</p>
+              <p>예금주: 주식회사 포트레이트</p>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">* 주문 완료 후 입금해주시면 확인 후 배송이 시작됩니다.</p>
           </div>
         </section>
 
-        {/* Agreement Widget */}
+        {/* Agreement */}
         <section>
-          <h3 className="font-serif-heading font-bold text-slate-900 mb-4 text-base">약관 동의</h3>
-          <div id="agreement-widget" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-            {/* 약관 UI가 여기에 렌더링됩니다 */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={agreementChecked}
+              onChange={(e) => setAgreementChecked(e.target.checked)}
+              className="w-5 h-5 accent-brand-600"
+            />
+            <label htmlFor="terms" className="text-sm text-slate-600 font-medium cursor-pointer select-none">
+              구매 조건 및 결제 진행에 동의합니다.
+            </label>
           </div>
         </section>
       </div>
