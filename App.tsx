@@ -28,12 +28,7 @@ const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  const [gallery, setGallery] = useState<GeneratedImage[]>(() => {
-    try {
-      const saved = localStorage.getItem('my_gallery_images');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) { return []; }
-  });
+  const [gallery, setGallery] = useState<GeneratedImage[]>([]);
 
   const showToast = useCallback((message: string) => setToastMessage(message), []);
 
@@ -160,6 +155,34 @@ const App: React.FC = () => {
     };
   }, [fetchProfile]);
 
+  // Fetch Gallery on User Change
+  useEffect(() => {
+    if (!user?.id) {
+      setGallery([]);
+      return;
+    }
+
+    const fetchGallery = async () => {
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setGallery(data.map(item => ({
+          id: item.id,
+          url: item.url,
+          styleId: item.style_id,
+          styleName: item.style_name,
+          date: item.created_at
+        })));
+      }
+    };
+
+    fetchGallery();
+  }, [user?.id]);
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -246,20 +269,68 @@ const App: React.FC = () => {
     );
   }
 
-  const addToGallery = (newImages: string[], style: any) => {
-    const newItems = newImages.map(url => ({
-      id: Date.now().toString() + Math.random().toString(),
-      url,
-      styleId: style?.id || 'custom',
-      styleName: style?.name || 'Custom',
-      date: new Date().toISOString()
-    }));
+  const addToGallery = async (newImages: string[], style: any) => {
+    if (!user?.id) return;
 
-    setGallery(prev => {
-      const updated = [...newItems, ...prev];
-      localStorage.setItem('my_gallery_images', JSON.stringify(updated));
-      return updated;
-    });
+    // Optimistically update UI (with base64 for now, will replace with URL on refresh or logic)
+    // Actually, converting to Object URL or keeping base64 is fine for immediate display
+    // But we need to upload.
+
+    showToast("갤러리에 저장 중...");
+
+    try {
+      const uploadedItems: GeneratedImage[] = [];
+
+      for (const base64Data of newImages) {
+        // 1. Convert Base64 to Blob
+        const response = await fetch(base64Data);
+        const blob = await response.blob();
+        const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.png`;
+
+        // 2. Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('pawtrait_gallery')
+          .upload(fileName, blob, { contentType: 'image/png' });
+
+        if (uploadError) throw uploadError;
+
+        // 3. Get Public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('pawtrait_gallery')
+          .getPublicUrl(fileName);
+
+        // 4. Insert to DB
+        const { data: insertData, error: insertError } = await supabase
+          .from('gallery')
+          .insert({
+            user_id: user.id,
+            url: publicUrl,
+            style_id: style?.id || 'custom',
+            style_name: style?.name || 'Custom'
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        if (insertData) {
+          uploadedItems.push({
+            id: insertData.id,
+            url: insertData.url,
+            styleId: insertData.style_id,
+            styleName: insertData.style_name,
+            date: insertData.created_at
+          });
+        }
+      }
+
+      setGallery(prev => [...uploadedItems, ...prev]);
+      showToast("갤러리에 안전하게 저장되었습니다.");
+
+    } catch (error) {
+      console.error("Gallery Upload Error:", error);
+      showToast("갤러리 저장 중 오류가 발생했습니다.");
+    }
   };
 
   return (
