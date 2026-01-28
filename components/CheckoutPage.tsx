@@ -27,7 +27,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   amount,
   credits,
   onBack,
-  onSuccess
+  onSuccess,
+  showToast
 }) => {
   const [loading, setLoading] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
@@ -176,7 +177,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <p className="font-bold text-slate-800 mb-2">무통장 입금</p>
             <div className="bg-slate-50 p-4 rounded-xl text-sm space-y-1 text-slate-600">
-              <p>신한은행 110-123-456789</p>
+              <div className="flex items-center gap-2">
+                <p>신한은행 <span className="font-bold text-brand-600">110-123-456789</span></p>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText("110-123-456789");
+                    showToast("계좌번호가 복사되었습니다.");
+                  }}
+                  className="bg-white border border-slate-200 rounded px-1.5 py-0.5 text-xs text-slate-500 hover:text-brand-600 hover:border-brand-200 transition-colors flex items-center gap-1 leading-none"
+                >
+                  <Copy className="w-3 h-3" /> 복사
+                </button>
+              </div>
               <p>예금주: 주식회사 포트레이트</p>
             </div>
             <p className="text-xs text-slate-400 mt-2">* 주문 완료 후 입금해주시면 확인 후 배송이 시작됩니다.</p>

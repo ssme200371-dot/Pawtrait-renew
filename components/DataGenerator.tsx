@@ -194,10 +194,24 @@ export const DataGenerator: React.FC = () => {
                   <div className="space-y-3 flex-1">
                     <div className="flex items-center flex-wrap gap-2">
                       <span className={`w-3 h-3 rounded-full ${req.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : req.status === 'APPROVED' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                      <span className="font-bold text-xl">{req.user_nickname}님</span>
-                      <span className="text-slate-500 text-xs">({req.package_name})</span>
+                      <span className="font-bold text-xl">{req.user_name || req.user_nickname}님</span>
+                      <span className="text-slate-500 text-sm font-medium">({req.package_name})</span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50 space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-400 w-16">입금자명</span>
+                        <span className="text-white font-bold">{req.user_name || req.user_nickname}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-400 w-16">이메일</span>
+                        <span className="text-white font-mono text-xs">{req.user_email || '이메일 정보 없음'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-400 w-16">요청시각</span>
+                        <span className="text-slate-500 text-xs">{new Date(req.created_at).toLocaleString('ko-KR')}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 pt-1">
                       <div className="bg-slate-900 px-3 py-1.5 rounded-lg text-sm">
                         <span className="text-slate-500 mr-2">입금액</span>
                         <span className="text-brand-400 font-bold">{req.amount.toLocaleString()}원</span>
@@ -207,8 +221,6 @@ export const DataGenerator: React.FC = () => {
                         <span className="text-green-400 font-bold">{req.credits} Cr</span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-600">이메일: {req.user_email || '미입력'}</p>
-                    <p className="text-[10px] text-slate-600">요청 시각: {new Date(req.created_at).toLocaleString('ko-KR')}</p>
                   </div>
 
                   <div className="shrink-0 w-full sm:w-auto flex flex-col gap-2">

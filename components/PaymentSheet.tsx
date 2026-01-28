@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Added missing Loader2 import
-import { Check, X, Loader2 } from 'lucide-react';
+import { Check, X, Loader2, Copy } from 'lucide-react';
 import { BANK_INFO } from '../constants';
 import { supabase } from '../supabaseClient';
 import { Button } from './Button';
@@ -104,7 +104,18 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
                   <p className="text-xs text-slate-400 mb-1 text-center font-bold">입금하실 금액</p>
                   <p className="text-3xl font-bold text-center text-brand-600">{amount.toLocaleString()}원</p>
                   <div className="mt-4 pt-4 border-t border-slate-200 space-y-1">
-                    <p className="text-center text-slate-700 font-bold">{BANK_INFO.name} <span className="text-brand-600">{BANK_INFO.accountNumber}</span></p>
+                    <div className="text-center text-slate-700 font-bold flex items-center justify-center gap-2">
+                      <span>{BANK_INFO.name} <span className="text-brand-600">{BANK_INFO.accountNumber}</span></span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(BANK_INFO.accountNumber);
+                          alert("계좌번호가 복사되었습니다.");
+                        }}
+                        className="bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-brand-600 hover:border-brand-200 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <p className="text-center text-slate-500 text-sm">예금주: {BANK_INFO.holder}</p>
                   </div>
                 </div>

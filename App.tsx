@@ -364,7 +364,7 @@ const App: React.FC = () => {
                 setStudioView('RESULT');
               }} credits={credits} onPurchaseCredits={() => { }} onDeductCredit={handleDeductCredits} user={user} /> :
                 studioView === 'RESULT' ? <ResultPage initialImages={selectedImageUrls} onHome={resetFlow} onCheckout={(image, type) => { setSelectedImageUrls([image]); setSelectedProductType(type); setStudioView('CHECKOUT'); }} showToast={showToast} /> :
-                  studioView === 'CHECKOUT' ? <CheckoutPage productType={selectedProductType} selectedImageUrl={selectedImageUrls[0]} onBack={() => setStudioView('RESULT')} onSuccess={() => setOrderComplete(true)} /> :
+                  studioView === 'CHECKOUT' ? <CheckoutPage productType={selectedProductType} selectedImageUrl={selectedImageUrls[0]} onBack={() => setStudioView('RESULT')} onSuccess={() => setOrderComplete(true)} showToast={showToast} /> :
                     null
           )
         )}
