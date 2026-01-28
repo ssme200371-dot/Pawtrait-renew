@@ -238,6 +238,22 @@ const App: React.FC = () => {
     );
   }
 
+  const addToGallery = (newImages: string[], style: any) => {
+    const newItems = newImages.map(url => ({
+      id: Date.now().toString() + Math.random().toString(),
+      url,
+      styleId: style?.id || 'custom',
+      styleName: style?.name || 'Custom',
+      date: new Date().toISOString()
+    }));
+
+    setGallery(prev => {
+      const updated = [...newItems, ...prev];
+      localStorage.setItem('my_gallery_images', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar
@@ -263,7 +279,11 @@ const App: React.FC = () => {
             </div>
           ) : (
             studioView === 'LANDING' ? <LandingPage onStart={() => setStudioView('STUDIO')} onNavigateToGallery={() => setActiveTab('GALLERY')} onNavigateToReviews={() => setActiveTab('REVIEWS')} onOpenLogin={() => setIsLoginModalOpen(true)} user={user} /> :
-              studioView === 'STUDIO' ? <StudioPage onBack={() => setStudioView('LANDING')} onGenerate={(urls, style) => { setSelectedImageUrls(urls); setStudioView('RESULT'); }} credits={credits} onPurchaseCredits={() => { }} onDeductCredit={handleDeductCredits} user={user} /> :
+              studioView === 'STUDIO' ? <StudioPage onBack={() => setStudioView('LANDING')} onGenerate={(urls, style) => {
+                setSelectedImageUrls(urls);
+                addToGallery(urls, style); // Save to gallery immediately
+                setStudioView('RESULT');
+              }} credits={credits} onPurchaseCredits={() => { }} onDeductCredit={handleDeductCredits} user={user} /> :
                 studioView === 'RESULT' ? <ResultPage initialImages={selectedImageUrls} onHome={resetFlow} onCheckout={(image, type) => { setSelectedImageUrls([image]); setSelectedProductType(type); setStudioView('CHECKOUT'); }} showToast={showToast} /> :
                   studioView === 'CHECKOUT' ? <CheckoutPage productType={selectedProductType} selectedImageUrl={selectedImageUrls[0]} onBack={() => setStudioView('RESULT')} onSuccess={() => setOrderComplete(true)} /> :
                     null

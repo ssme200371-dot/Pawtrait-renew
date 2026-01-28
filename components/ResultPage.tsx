@@ -13,9 +13,6 @@ interface ResultPageProps {
   showToast: (msg: string) => void;
 }
 
-// Kakao JavaScript Key: Load from env or use test default
-const KAKAO_API_KEY = process.env.KAKAO_API_KEY || 'c089c8172def97eb00c07217cae27404';
-
 export const ResultPage: React.FC<ResultPageProps> = ({ initialImages = [], onHome, onCheckout, showToast }) => {
   const [selectedImage, setSelectedImage] = useState<string>(initialImages[0] || "");
   const [activeTab, setActiveTab] = useState<'ORIGINAL' | 'WALL'>('ORIGINAL');
@@ -35,16 +32,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ initialImages = [], onHo
     });
   }, []);
 
-  // Initialize Kakao SDK
-  useEffect(() => {
-    if (window.Kakao && !window.Kakao.isInitialized()) {
-      try {
-        window.Kakao.init(KAKAO_API_KEY);
-      } catch (e) {
-        console.warn("Kakao Init Failed:", e);
-      }
-    }
-  }, []);
+
 
 
 
@@ -82,43 +70,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ initialImages = [], onHo
     }
   };
 
-  // (A) Kakao Share Logic
-  const handleKakaoShare = () => {
-    if (!window.Kakao || !window.Kakao.isInitialized()) {
-      showToast("⚠️ 카카오톡 공유를 사용할 수 없습니다.");
-      return;
-    }
 
-    // Since selectedImage is likely base64 in this demo, Kakao might block it.
-    // In production, you must upload the image to a server first and use a public URL.
-    // For this demo, we use a placeholder image or assume the URL is public if not base64.
-    const isBase64 = selectedImage.startsWith('data:');
-    const imageUrlToShare = isBase64
-      ? 'https://i.imgur.com/h2khhcs.png' // Fallback image for demo (Kakao doesn't support Base64 directly)
-      : selectedImage;
-
-    window.Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: '나만의 AI 스타일 이미지 생성 완료!',
-        description: '#AI프로필 #스타일변환 #PawTrait',
-        imageUrl: imageUrlToShare,
-        link: {
-          mobileWebUrl: window.location.href,
-          webUrl: window.location.href,
-        },
-      },
-      buttons: [
-        {
-          title: '나도 해보기',
-          link: {
-            mobileWebUrl: window.location.href,
-            webUrl: window.location.href,
-          },
-        },
-      ],
-    });
-  };
 
   // (D) Copy Link Logic
   const handleCopyLink = () => {
@@ -235,19 +187,8 @@ export const ResultPage: React.FC<ResultPageProps> = ({ initialImages = [], onHo
         {/* Share & Save Actions (2 Buttons) */}
         <div className="bg-white px-6 py-8 border-b border-slate-100">
           <h3 className="text-center text-slate-900 font-bold mb-6 font-serif-heading">작품 공유 및 소장</h3>
-          <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
-            {/* 1. Kakao Share */}
-            <button
-              onClick={handleKakaoShare}
-              className="flex flex-col items-center gap-2 group"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#FAE100] flex items-center justify-center shadow-sm group-active:scale-95 transition-transform text-[#371D1E]">
-                <MessageCircle className="w-7 h-7 fill-current" />
-              </div>
-              <span className="text-xs font-medium text-slate-600">카카오톡</span>
-            </button>
-
-            {/* 2. Copy Link */}
+          <div className="grid grid-cols-1 gap-4 max-w-xs mx-auto">
+            {/* Copy Link Only */}
             <button
               onClick={handleCopyLink}
               className="flex flex-col items-center gap-2 group"
