@@ -96,18 +96,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ initialImages = [], onHo
 
       <div className="max-w-md mx-auto">
         {/* Warning Banner */}
-        <div className="bg-amber-50 border-b border-amber-200 p-4 flex items-start gap-3 animate-in slide-in-from-top-2">
-          <div className="bg-amber-100 p-2 rounded-full text-amber-600 shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-amber-900">⚠️ 이 이미지는 브라우저에만 저장됩니다.</p>
-            <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-              캐시 삭제 시 이미지가 영구적으로 사라질 수 있습니다.<br />
-              <span className="font-bold underline">꼭 [저장] 버튼을 눌러 파일을 보관하세요!</span>
-            </p>
-          </div>
-        </div>
+
 
         {/* Main Preview Area */}
         <div className="bg-slate-900 aspect-square w-full relative overflow-hidden shadow-2xl z-10 transition-colors duration-500">
