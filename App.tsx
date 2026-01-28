@@ -163,6 +163,14 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+
+      // Force clear Supabase tokens from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          localStorage.removeItem(key);
+        }
+      });
+
     } catch (err) {
       console.error("Logout Error:", err);
     } finally {
