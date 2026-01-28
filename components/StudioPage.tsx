@@ -142,14 +142,43 @@ export const StudioPage: React.FC<StudioPageProps> = ({
     if ((window as any).aistudio) {
       const hasKey = await (window as any).aistudio.hasSelectedApiKey();
       if (!hasKey) {
-        // Trigger key selection and proceed immediately to avoid race conditions
         (window as any).aistudio.openSelectKey();
       }
     }
 
+    setIsGenerating(true);
+    setLoadingMessage("🔍 반려동물 사진인지 확인하고 있습니다...");
+
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (apiKey) {
+        const ai = new GoogleGenAI({ apiKey });
+        const base64Check = await fileToBase64(selectedFile);
+
+        const verifyResp = await ai.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: [{
+            parts: [
+              { text: "Is the main subject of this image a dog or a cat? Answer strictly 'YES' if it is a dog or a cat. Answer 'NO' if it is not." },
+              { inlineData: { mimeType: selectedFile.type, data: base64Check } }
+            ]
+          }]
+        });
+
+        const ans = verifyResp.candidates?.[0]?.content?.parts?.[0]?.text?.toUpperCase() || "";
+        // Strict check: must contain YES
+        if (!ans.includes("YES")) {
+          setIsGenerating(false);
+          alert("죄송합니다. 강아지나 고양이 사진만 변환할 수 있습니다.");
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Verification skipped:", e);
+    }
+
     onDeductCredit(numberOfImages);
 
-    setIsGenerating(true);
     setLoadingStep(0);
     setLoadingMessage("🎨 AI가 화풍을 분석하고 있습니다...");
 
