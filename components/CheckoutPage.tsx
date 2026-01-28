@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, CreditCard, Truck, ShieldCheck, Diamond } from 'lucide-react';
+import { ChevronLeft, CreditCard, Truck, ShieldCheck, Diamond, Copy } from 'lucide-react';
 import { Button } from './Button';
 import { ProductType } from '../types';
-
-
 
 interface CheckoutPageProps {
   productType: ProductType;
@@ -13,6 +11,7 @@ interface CheckoutPageProps {
   credits?: number; // For credit packages
   onBack: () => void;
   onSuccess: () => void;
+  showToast: (msg: string) => void;
 }
 
 // 랜덤 주문 ID 생성
