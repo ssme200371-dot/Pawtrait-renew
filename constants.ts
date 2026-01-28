@@ -13,7 +13,7 @@ export const BANK_INFO = {
   name: '토스뱅크',
   accountNumber: '100057107725',
   holder: '박경민(더와이즈샵)',
-  tossBankCode: '092' 
+  tossBankCode: '092'
 };
 
 export const ART_STYLES: StyleOption[] = [
@@ -47,15 +47,15 @@ export const ART_STYLES: StyleOption[] = [
   {
     id: 'three_d_animation',
     name: '3D 애니메이션',
-    description: '디즈니/픽사 스타일의 귀여운 3D 캐릭터 입체 변환',
+    description: '동화 속 주인공 같은 귀여운 3D 캐릭터 입체 변환',
     thumbnailUrl: 'https://imgur.com/rVfqgfO.png',
     category: 'MODERN',
     recommendedFor: '귀여운 외모',
-    tags: ['modern', '3d', 'cute', 'pixar']
+    tags: ['modern', '3d', 'cute', 'animation']
   },
   {
     id: 'emotional_anime',
-    name: '지브리 감성',
+    name: '감성 애니메이션',
     description: '따뜻하고 몽글몽글한 애니메이션 속 한 장면',
     thumbnailUrl: 'https://imgur.com/NVojSk3.png',
     category: 'EMOTIONAL',
