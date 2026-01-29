@@ -270,7 +270,10 @@ const App: React.FC = () => {
   }
 
   const addToGallery = async (newImages: string[], style: any) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      showToast("로그인이 필요하여 갤러리에 저장되지 않았습니다.");
+      return;
+    }
 
     // Optimistically update UI (with base64 for now, will replace with URL on refresh or logic)
     // Actually, converting to Object URL or keeping base64 is fine for immediate display
@@ -327,9 +330,9 @@ const App: React.FC = () => {
       setGallery(prev => [...uploadedItems, ...prev]);
       showToast("갤러리에 안전하게 저장되었습니다.");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gallery Upload Error:", error);
-      showToast("갤러리 저장 중 오류가 발생했습니다.");
+      showToast(`갤러리 저장 실패: ${error.message || "알 수 없는 오류"}`);
     }
   };
 

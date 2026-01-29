@@ -521,7 +521,7 @@ export const StudioPage: React.FC<StudioPageProps> = ({
               <div className="flex p-1 bg-slate-100 rounded-xl mb-6 w-full sm:w-fit overflow-x-auto">
                 {[
                   { id: 'PRESET', label: '기본 스타일', icon: LayoutGrid },
-                  { id: 'REFERENCE', label: '참조 사진', icon: ImageIconLucide },
+                  // { id: 'REFERENCE', label: '참조 사진', icon: ImageIconLucide }, // Temporarily disabled
                 ].map((mode) => (
                   <button
                     key={mode.id}
