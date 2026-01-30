@@ -16,7 +16,7 @@ interface MembershipPageProps {
 
 export const MembershipPage: React.FC<MembershipPageProps> = ({ user, credits, onLogin, onPurchase }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [selectedPkg, setSelectedPkg] = useState<{ id: string, name: string, price: number, credits: number } | null>(null);
+  const [selectedPkg, setSelectedPkg] = useState<{ id: string, name: string, price: number, credits: number, originalPrice?: number } | null>(null);
 
   const faqs = [
     {
@@ -37,7 +37,7 @@ export const MembershipPage: React.FC<MembershipPageProps> = ({ user, credits, o
     }
   ];
 
-  const handlePkgClick = (pkg: { id: string, name: string, price: number, credits: number }) => {
+  const handlePkgClick = (pkg: { id: string, name: string, price: number, credits: number, originalPrice?: number }) => {
     setSelectedPkg(pkg);
   };
 
@@ -118,6 +118,11 @@ export const MembershipPage: React.FC<MembershipPageProps> = ({ user, credits, o
                   <p className="text-2xl sm:text-3xl font-bold text-slate-900">
                     {pkg.price.toLocaleString()}<span className="text-lg font-normal text-slate-500">원</span>
                   </p>
+                  {pkg.originalPrice && (
+                    <p className="text-sm font-medium text-slate-400 decoration-slate-400 line-through decoration-1">
+                      {pkg.originalPrice.toLocaleString()}원
+                    </p>
+                  )}
                 </div>
 
                 <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1">

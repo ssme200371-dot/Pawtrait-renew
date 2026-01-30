@@ -17,7 +17,7 @@ interface StudioPageProps {
   onGenerate: (imageUrls: string[], style: StyleOption) => void;
   onBack: () => void;
   credits: number;
-  onPurchaseCredits: (pkg: { credits: number, price: number, name: string }) => void;
+  onPurchaseCredits: (pkg: { credits: number, price: number, name: string, originalPrice?: number }) => void;
   onDeductCredit: (amount: number) => void;
   user: UserProfile | null;
 }
@@ -74,7 +74,7 @@ export const StudioPage: React.FC<StudioPageProps> = ({
   const [loadingMessage, setLoadingMessage] = useState("");
 
   const [showCreditShop, setShowCreditShop] = useState(false);
-  const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<{ name: string, price: number, credits: number } | null>(null);
+  const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<{ name: string, price: number, credits: number, originalPrice?: number } | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -701,7 +701,10 @@ export const StudioPage: React.FC<StudioPageProps> = ({
                       </div>
                     </div>
 
-                    <div>
+                    <div className="flex flex-col items-end gap-1">
+                      {pkg.originalPrice && (
+                        <span className="text-xs text-slate-400 line-through decoration-slate-400 decoration-1">{pkg.originalPrice.toLocaleString()}원</span>
+                      )}
                       <span className="bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md group-hover:bg-brand-600 transition-colors flex items-center gap-2">
                         {selectedPackageForPayment?.name === pkg.name ? <Loader2 className="w-4 h-4 animate-spin" /> : `${pkg.price.toLocaleString()}원`}
                       </span>

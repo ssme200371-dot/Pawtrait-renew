@@ -128,9 +128,9 @@ export const ART_STYLES: StyleOption[] = [
 ];
 
 export const CREDIT_PACKAGES = [
-  { id: 'starter', name: '스타터 팩', price: 4500, credits: 5, tag: null },
-  { id: 'standard', name: '스탠다드 팩', price: 9900, credits: 12, tag: 'Best' },
-  { id: 'pro', name: '프로 작가 팩', price: 19900, credits: 25, tag: 'Pro' }
+  { id: 'starter', name: '가볍게 시작하기', price: 1000, originalPrice: 1500, credits: 1, tag: null },
+  { id: 'standard', name: '실속 패키지', price: 4500, originalPrice: 6000, credits: 5, tag: 'Best' },
+  { id: 'pro', name: '프로 작가 팩', price: 9900, originalPrice: 14900, credits: 12, tag: 'Pro' }
 ];
 
 export const REVIEWS: Review[] = [
